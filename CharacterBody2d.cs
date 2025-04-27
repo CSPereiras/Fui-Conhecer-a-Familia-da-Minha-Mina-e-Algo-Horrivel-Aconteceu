@@ -3,6 +3,9 @@ using System;
 
 public partial class CharacterBody2d : CharacterBody2D
 {
+	[Export]
+	public int Speed { get; set; } = 10;
+	
 	public override void _Process(double delta)
 	{
 		GetInput();
