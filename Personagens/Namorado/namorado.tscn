@@ -1,0 +1,25 @@
+[gd_scene load_steps=4 format=3 uid="uid://e85dfftya6fs"]
+
+[ext_resource type="Script" uid="uid://dnati5jsyngs" path="res://Namorado.cs" id="1_036jc"]
+[ext_resource type="Texture2D" uid="uid://36iocb7shjkk" path="res://icon.svg" id="2_kq23n"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6h6pe"]
+size = Vector2(88, 68)
+
+[node name="Namorado" type="CharacterBody2D"]
+collision_layer = 2
+script = ExtResource("1_036jc")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-8, -8)
+shape = SubResource("RectangleShape2D_6h6pe")
+
+[node name="Icon" type="Sprite2D" parent="."]
+position = Vector2(-7, -7)
+scale = Vector2(0.648438, 0.523438)
+texture = ExtResource("2_kq23n")
+
+[node name="TimerDash" type="Timer" parent="."]
+one_shot = true
+
+[connection signal="timeout" from="TimerDash" to="." method="_on_timer_dash_timeout"]

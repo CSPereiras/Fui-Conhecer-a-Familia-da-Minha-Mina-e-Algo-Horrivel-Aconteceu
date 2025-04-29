@@ -1,7 +1,6 @@
-[gd_scene load_steps=6 format=3 uid="uid://ojjcnh4cjv8m"]
+[gd_scene load_steps=4 format=3 uid="uid://ojjcnh4cjv8m"]
 
-[ext_resource type="Script" uid="uid://dnati5jsyngs" path="res://CharacterBody2d.cs" id="1_82dmm"]
-[ext_resource type="Texture2D" uid="uid://36iocb7shjkk" path="res://icon.svg" id="1_g0b42"]
+[ext_resource type="PackedScene" uid="uid://e85dfftya6fs" path="res://Personagens/Namorado/namorado.tscn" id="1_g0b42"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_7yuna"]
 size = Vector2(1152.5, 42)
@@ -9,41 +8,28 @@ size = Vector2(1152.5, 42)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_82dmm"]
 size = Vector2(20, 659)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_6h6pe"]
-size = Vector2(88, 68)
-
 [node name="Sala de Jantar" type="Node2D"]
 
-[node name="Chão" type="Area2D" parent="."]
+[node name="Chão" type="StaticBody2D" parent="."]
 position = Vector2(580, 671)
 
 [node name="ColisaoChao" type="CollisionShape2D" parent="Chão"]
 position = Vector2(-2.25, -1)
 shape = SubResource("RectangleShape2D_7yuna")
 
-[node name="ParedeEsquerda" type="Area2D" parent="."]
-position = Vector2(-15, 332)
+[node name="ParedeEsquerda" type="StaticBody2D" parent="."]
+position = Vector2(0, 309)
 
 [node name="ColisaoPE" type="CollisionShape2D" parent="ParedeEsquerda"]
-position = Vector2(5, -7)
+position = Vector2(-13, 14)
 shape = SubResource("RectangleShape2D_82dmm")
 
-[node name="ParedeDireita" type="Area2D" parent="."]
+[node name="ParedeDireita" type="StaticBody2D" parent="."]
 position = Vector2(1159, 334)
 
 [node name="ColisaoPD" type="CollisionShape2D" parent="ParedeDireita"]
 position = Vector2(5, -7)
 shape = SubResource("RectangleShape2D_82dmm")
 
-[node name="CharacterBody2D" type="CharacterBody2D" parent="."]
-position = Vector2(247, 608)
-script = ExtResource("1_82dmm")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D"]
-position = Vector2(-8, -8)
-shape = SubResource("RectangleShape2D_6h6pe")
-
-[node name="Icon" type="Sprite2D" parent="CharacterBody2D"]
-position = Vector2(-7, -11)
-scale = Vector2(0.648438, 0.523438)
-texture = ExtResource("1_g0b42")
+[node name="Namorado" parent="." instance=ExtResource("1_g0b42")]
+position = Vector2(241, 621)
