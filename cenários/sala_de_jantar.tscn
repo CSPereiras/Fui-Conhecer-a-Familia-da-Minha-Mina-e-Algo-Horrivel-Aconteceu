@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://ojjcnh4cjv8m"]
+[gd_scene load_steps=5 format=3 uid="uid://ojjcnh4cjv8m"]
 
 [ext_resource type="PackedScene" uid="uid://e85dfftya6fs" path="res://Personagens/Namorado/namorado.tscn" id="1_g0b42"]
+[ext_resource type="PackedScene" uid="uid://dtfraxb01exs4" path="res://Personagens/Sogro/chefe.tscn" id="2_82dmm"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_7yuna"]
 size = Vector2(1152.5, 42)
@@ -10,10 +11,10 @@ size = Vector2(20, 659)
 
 [node name="Sala de Jantar" type="Node2D"]
 
-[node name="Chão" type="StaticBody2D" parent="."]
+[node name="Chao" type="StaticBody2D" parent="."]
 position = Vector2(580, 671)
 
-[node name="ColisaoChao" type="CollisionShape2D" parent="Chão"]
+[node name="ColisaoChao" type="CollisionShape2D" parent="Chao"]
 position = Vector2(-2.25, -1)
 shape = SubResource("RectangleShape2D_7yuna")
 
@@ -32,4 +33,7 @@ position = Vector2(5, -7)
 shape = SubResource("RectangleShape2D_82dmm")
 
 [node name="Namorado" parent="." instance=ExtResource("1_g0b42")]
-position = Vector2(241, 621)
+position = Vector2(239, 582)
+
+[node name="Chefe" parent="." instance=ExtResource("2_82dmm")]
+position = Vector2(836, 497)

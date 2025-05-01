@@ -26,18 +26,23 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6h6pe"]
-size = Vector2(38, 67)
+size = Vector2(49, 115)
 
 [node name="Namorado" type="CharacterBody2D"]
 collision_layer = 2
 script = ExtResource("1_036jc")
 
 [node name="SpriteNamorado" type="AnimatedSprite2D" parent="."]
+position = Vector2(-2.5, 2.99999)
+scale = Vector2(2.06849, 1.91304)
 sprite_frames = SubResource("SpriteFrames_3pufj")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(-3, 3.5)
+position = Vector2(-8.5, 14.5)
 shape = SubResource("RectangleShape2D_6h6pe")
+
+[node name="TimerImunidade" type="Timer" parent="."]
+one_shot = true
 
 [node name="TimerDash" type="Timer" parent="."]
 wait_time = 0.2
@@ -46,5 +51,6 @@ one_shot = true
 [node name="TimerPulo" type="Timer" parent="."]
 wait_time = 0.2
 
+[connection signal="timeout" from="TimerImunidade" to="." method="_on_timer_imunidade_timeout"]
 [connection signal="timeout" from="TimerDash" to="." method="_on_timer_dash_timeout"]
 [connection signal="timeout" from="TimerPulo" to="." method="_on_timer_pulo_timeout"]

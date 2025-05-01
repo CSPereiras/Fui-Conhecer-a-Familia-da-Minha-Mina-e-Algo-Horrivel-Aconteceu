@@ -10,31 +10,58 @@ public partial class Namorado : CharacterBody2D
 	
 	/*variaveis*/
 	[Export]
-	private int Gravity = GravNum;
+	private int Lifes {get; set;} = 5;
+	private int Gravity { get; set; } = GravNum;
 	private int Speed { get; set; } = Velo;
 	private int Direction {get; set; } = 1;
+	private bool IsImmune {get; set; } = false;
 	private bool IsJumping {get; set; } = false;
 	private bool BackupOnFloor {get; set; } = true;
 	private bool IsDashing {get; set; } = false;
 	
 	/*nós*/
+	private Timer TimerImunidade;
 	private Timer TimerDash; 
-	private Timer TimerPulo; 
+	private Timer TimerPulo;  
 	
 	public override void _Ready(){
+		TimerImunidade = GetNode<Timer>("TimerImunidade");
+		TimerImunidade.Timeout += FimDaImunidade;
 		TimerDash = GetNode<Timer>("TimerDash");
 		TimerDash.Timeout += FimDoDash;
 		TimerPulo = GetNode<Timer>("TimerPulo");
 		TimerPulo.Timeout += FimDoPulo;
+		GD.Print("Vidas restantes: " + Lifes);
 	}
 	
 	public override void _Process(double delta)
 	{
 		Gravidade();
-		Anda();
-		Dash();
-		Pula();
-		DebugaPulo();
+		Movimenta();
+		KinematicCollision2D Colisao = MoveAndCollide(Velocity * (float)delta);
+		if(Colisao != null){
+			AdministraColisao(Colisao.GetCollider() as Node2D);
+		}
+	}
+	
+	private void AdministraColisao(Node2D Colisor){
+		if(Colisor.Name.Equals("Chefe") && !IsImmune){
+			IsImmune = true;
+			Lifes--;
+			GD.Print("Vidas restantes: " + Lifes);
+			VerificaVidas();
+			TimerImunidade.Start();
+		}
+	} 
+	
+	private void VerificaVidas(){
+		if(Lifes <= 0){
+			QueueFree();
+		}
+	}
+	
+	private void FimDaImunidade(){
+		IsImmune = false;
 	}
 	
 	private void Gravidade(){
@@ -42,15 +69,18 @@ public partial class Namorado : CharacterBody2D
 		MoveAndSlide();
 	}
 	
-	private void Anda(){
+	private void Movimenta(){
 		Vector2 inputDirection = Input.GetVector("left", "right", "down", "up");
 		if(!IsDashing){
 			if(inputDirection.X != 0){
 				Direction = (int)inputDirection.X;
 			}
 			Velocity = inputDirection * Speed;
-			MoveAndSlide();
+			/*MoveAndSlide();*/
 		}
+		
+		Dash();
+		Pula();
 	}
 	
 	private void Pula(){
@@ -60,13 +90,6 @@ public partial class Namorado : CharacterBody2D
 		}
 		
 		AdministraPulo();
-	}
-	
-	private bool Backup = false;
-	private void DebugaPulo(){
-		if(Backup != IsJumping){
-			Backup = IsJumping;
-		}
 	}
 	
 	private void FimDoPulo(){
@@ -95,7 +118,6 @@ public partial class Namorado : CharacterBody2D
 		if(IsDashing){
 			Velocity = new Vector2(1000*Direction, 0);
 			Gravity = 0;
-			MoveAndSlide();
 		}
 	}
 	
