@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://e85dfftya6fs"]
+[gd_scene load_steps=8 format=3 uid="uid://e85dfftya6fs"]
 
 [ext_resource type="Script" uid="uid://dnati5jsyngs" path="res://Personagens/Namorado/Namorado.cs" id="1_036jc"]
 [ext_resource type="Texture2D" uid="uid://c4yde18plvf68" path="res://Personagens/Namorado/Namorado.png" id="2_036jc"]
@@ -28,6 +28,9 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6h6pe"]
 size = Vector2(49, 115)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_036jc"]
+size = Vector2(54, 31)
+
 [node name="Namorado" type="CharacterBody2D"]
 collision_layer = 2
 script = ExtResource("1_036jc")
@@ -37,7 +40,7 @@ position = Vector2(-2.5, 2.99999)
 scale = Vector2(2.06849, 1.91304)
 sprite_frames = SubResource("SpriteFrames_3pufj")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="ColisaoNamorado" type="CollisionShape2D" parent="."]
 position = Vector2(-8.5, 14.5)
 shape = SubResource("RectangleShape2D_6h6pe")
 
@@ -51,6 +54,18 @@ one_shot = true
 [node name="TimerPulo" type="Timer" parent="."]
 wait_time = 0.2
 
+[node name="Soco" type="Area2D" parent="."]
+position = Vector2(25, 16)
+
+[node name="ColisaoSoco" type="CollisionShape2D" parent="Soco"]
+position = Vector2(17, -2.5)
+shape = SubResource("RectangleShape2D_036jc")
+
+[node name="TimerSoco" type="Timer" parent="."]
+wait_time = 0.3
+
 [connection signal="timeout" from="TimerImunidade" to="." method="_on_timer_imunidade_timeout"]
 [connection signal="timeout" from="TimerDash" to="." method="_on_timer_dash_timeout"]
 [connection signal="timeout" from="TimerPulo" to="." method="_on_timer_pulo_timeout"]
+[connection signal="body_entered" from="Soco" to="." method="_on_soco_body_entered"]
+[connection signal="timeout" from="TimerSoco" to="." method="_on_timer_soco_timeout"]
