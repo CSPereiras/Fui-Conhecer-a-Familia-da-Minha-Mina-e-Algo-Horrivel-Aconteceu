@@ -11,10 +11,10 @@ size = Vector2(20, 659)
 
 [node name="Sala de Jantar" type="Node2D"]
 
-[node name="Chão" type="StaticBody2D" parent="."]
+[node name="Chao" type="StaticBody2D" parent="."]
 position = Vector2(580, 671)
 
-[node name="ColisaoChao" type="CollisionShape2D" parent="Chão"]
+[node name="ColisaoChao" type="CollisionShape2D" parent="Chao"]
 position = Vector2(-2.25, -1)
 shape = SubResource("RectangleShape2D_7yuna")
 
