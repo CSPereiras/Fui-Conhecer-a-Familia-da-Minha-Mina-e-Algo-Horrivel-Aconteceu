@@ -40,8 +40,12 @@ position = Vector2(-2.5, 2.99999)
 scale = Vector2(2.06849, 1.91304)
 sprite_frames = SubResource("SpriteFrames_3pufj")
 
-[node name="ColisaoNamorado" type="CollisionShape2D" parent="."]
+[node name="ColisaoNamorado1" type="CollisionShape2D" parent="."]
 position = Vector2(-8.5, 14.5)
+shape = SubResource("RectangleShape2D_6h6pe")
+
+[node name="ColisaoNamorado2" type="CollisionShape2D" parent="."]
+position = Vector2(4.5, 14.5)
 shape = SubResource("RectangleShape2D_6h6pe")
 
 [node name="TimerImunidade" type="Timer" parent="."]
@@ -57,8 +61,12 @@ wait_time = 0.2
 [node name="Soco" type="Area2D" parent="."]
 position = Vector2(25, 16)
 
-[node name="ColisaoSoco" type="CollisionShape2D" parent="Soco"]
+[node name="ColisaoSoco1" type="CollisionShape2D" parent="Soco"]
 position = Vector2(17, -2.5)
+shape = SubResource("RectangleShape2D_036jc")
+
+[node name="ColisaoSoco2" type="CollisionShape2D" parent="Soco"]
+position = Vector2(-73, -3)
 shape = SubResource("RectangleShape2D_036jc")
 
 [node name="TimerSoco" type="Timer" parent="."]

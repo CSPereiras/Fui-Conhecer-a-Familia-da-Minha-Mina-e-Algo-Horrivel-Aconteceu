@@ -1,13 +1,13 @@
 [gd_scene load_steps=5 format=3 uid="uid://dtfraxb01exs4"]
 
-[ext_resource type="Script" uid="uid://bxcqkwrs3dwh8" path="res://Personagens/Sogro/Chefe.cs" id="1_ggn33"]
-[ext_resource type="Texture2D" uid="uid://br61ipgwnglh3" path="res://Personagens/Sogro/ChefeNeighbor.png" id="1_mseep"]
+[ext_resource type="Script" uid="uid://bxcqkwrs3dwh8" path="res://Personagens/Sogro/Chefe.cs" id="1_yxyuj"]
+[ext_resource type="Texture2D" uid="uid://br61ipgwnglh3" path="res://Personagens/Sogro/ChefeNeighbor.png" id="2_l0akp"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_003ba"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("1_mseep")
+"texture": ExtResource("2_l0akp")
 }],
 "loop": true,
 "name": &"default",
@@ -18,7 +18,7 @@ animations = [{
 size = Vector2(78, 123)
 
 [node name="Chefe" type="CharacterBody2D"]
-script = ExtResource("1_ggn33")
+script = ExtResource("1_yxyuj")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 scale = Vector2(0.1, 0.1)
