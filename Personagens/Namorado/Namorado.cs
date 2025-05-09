@@ -10,17 +10,22 @@ public partial class Namorado : CharacterBody2D
 	
 	/*variaveis*/
 	[Export]
-	private int Lifes {get; set;} = 5;
-	private int Gravity { get; set; } = GravNum;
-	private int Speed { get; set; } = Velo;
-	private int Direction { get; set; } = 1;
-	private bool IsImmune { get; set; } = false;
-	private bool IsJumping { get; set; } = false;
-	private bool BackupOnFloor { get; set; } = true;
-	private bool IsDashing { get; set; } = false;
-	private bool IsPunching { get; set; } = false;
+	private int Lifes {get; set;} = 5; //vidas
+	private int Gravity { get; set; } = GravNum; //gravidade
+	private int Speed { get; set; } = Velo; //velocidade
+	private int Direction { get; set; } = 1; //direção (para onde o jogador "aponta")
+	private bool IsImmune { get; set; } = false; //se o jogador tá imune
+	private bool IsJumping { get; set; } = false; //se o jogador está pulando
+	private bool BackupOnFloor { get; set; } = true; /* variavel auxiliar para 
+	ajudar a ver se o jogador está no chão*/
+	private bool IsDashing { get; set; } = false; //se o jogador tá fazendo o dash
+	private bool IsPunching { get; set; } = false; //se o jogador está socando
 	
 	/*nós*/
+	private CollisionShape2D ColisaoDireita; /*colisão normal*/
+	private CollisionShape2D ColisaoSocoDireita; /*colisão normal*/
+	private CollisionShape2D ColisaoEsquerda; /*colisão invertida*/
+	private CollisionShape2D ColisaoSocoEsquerda; /*colisão invertida*/
 	private Timer TimerImunidade;
 	private Timer TimerDash; 
 	private Timer TimerPulo;  
@@ -29,6 +34,10 @@ public partial class Namorado : CharacterBody2D
 	private AnimatedSprite2D Sprite;
 	
 	public override void _Ready(){
+		/*colisões*/
+		ColisaoDireita = GetNode<CollisionShape2D>("ColisaoNamorado1");
+		ColisaoEsquerda = GetNode<CollisionShape2D>("ColisaoNamorado2");
+		ColisaoEsquerda.Disabled = true;
 		/*timer que cuida da imunidade*/
 		TimerImunidade = GetNode<Timer>("TimerImunidade");
 		TimerImunidade.Timeout += FimDaImunidade;
@@ -42,6 +51,9 @@ public partial class Namorado : CharacterBody2D
 		Soco = GetNode<Area2D>("Soco");
 		Soco.BodyEntered += SocoColisao; 
 		Soco.Monitoring = false;
+		ColisaoSocoDireita = GetNode<CollisionShape2D>("Soco/ColisaoSoco1");
+		ColisaoSocoEsquerda = GetNode<CollisionShape2D>("Soco/ColisaoSoco2");
+		ColisaoSocoEsquerda.Disabled = true;
 		TimerSoco = GetNode<Timer>("TimerSoco");
 		TimerSoco.Timeout += FimDoSoco;
 		/*sprite animado*/
@@ -60,11 +72,15 @@ public partial class Namorado : CharacterBody2D
 		Bate();
 	}
 	
+	/*Faz o tratamento da gravidade*/
 	private void Gravidade(){
 		Velocity = new Vector2(0, Gravity);
 		MoveAndSlide();
 	}
 	
+	/*Gerencia todo o movimento, o que inclui fazer o movimento básico de andar
+	pros lados e chamar as funções auxiliares que cuidam do pulo, dash e 
+	orientação do sprite*/
 	private void Movimenta(){
 		Vector2 inputDirection = Input.GetVector("left", "right", "down", "up");
 		if(!IsDashing){
@@ -75,10 +91,30 @@ public partial class Namorado : CharacterBody2D
 			/*MoveAndSlide();*/
 		}
 		
+		AdministraSprite();
 		Dash();
 		Pula();
 	}
 	
+	/*Gerencia a orientação do sprite*/
+	private void AdministraSprite(){
+		if(Direction == 1){
+			Sprite.FlipH = false;
+			ColisaoDireita.Disabled = false;
+			ColisaoSocoDireita.Disabled = false;
+			ColisaoEsquerda.Disabled = true;
+			ColisaoSocoEsquerda.Disabled = true;
+		}else{
+			Sprite.FlipH = true;
+			ColisaoDireita.Disabled = true;
+			ColisaoSocoDireita.Disabled = true;
+			ColisaoEsquerda.Disabled = false;
+			ColisaoSocoEsquerda.Disabled = false;
+		}
+	}
+	
+	/*Gerencia a colisão do jogador com o chefe, retirando a vida dele e mexendo
+	em outras coisas necessárias*/
 	private void AdministraColisao(Node2D Colisor){
 		if(Colisor.Name.Equals("Chefe") && !IsImmune){
 			IsImmune = true;
@@ -89,16 +125,19 @@ public partial class Namorado : CharacterBody2D
 		}
 	} 
 	
+	/*Verifica quantas vidas tem e, caso seja zero, o jogador morre*/
 	private void VerificaVidas(){
 		if(Lifes <= 0){
 			QueueFree();
 		}
 	}
 	
+	/*Recebe o sinal do timeout do timer da imunidade e faz o tratamento*/
 	private void FimDaImunidade(){
 		IsImmune = false;
 	}
 	
+	/*Mecânica do pulo*/
 	private void Pula(){
 		if(Input.IsActionJustPressed("pulo") && !IsJumping){
 			Gravity = Impulso;
@@ -108,12 +147,14 @@ public partial class Namorado : CharacterBody2D
 		AdministraPulo();
 	}
 	
+	/*Recebe o sinal do timeout do timer do pulo e faz o tratamento*/
 	private void FimDoPulo(){
 		if(!IsDashing){
 			Gravity = GravNum;
 		}
 	}
 	
+	/*Retorna a possibilidade do jogador pular*/
 	private void AdministraPulo(){
 		if(IsOnFloor() != BackupOnFloor){
 			BackupOnFloor = IsOnFloor();
@@ -121,6 +162,7 @@ public partial class Namorado : CharacterBody2D
 		}
 	}
 	
+	/*Mecânica do dash*/
 	private void Dash(){
 		if(Input.IsActionJustPressed("dash") && !IsDashing && !IsPunching){
 			IsDashing = true;
@@ -130,6 +172,7 @@ public partial class Namorado : CharacterBody2D
 		MovimentoDash();
 	}
 	
+	/*Gerencia o movimento do dahs*/
 	private void MovimentoDash(){
 		if(IsDashing){
 			Velocity = new Vector2(1000*Direction, 0);
@@ -137,11 +180,13 @@ public partial class Namorado : CharacterBody2D
 		}
 	}
 	
+	/*Recebe o sinal do timeout do timer do dash e faz o tratamento*/
 	private void FimDoDash(){
 		IsDashing = false;
 		Gravity = GravNum;
 	}
 	
+	/*Mecânica do soco*/
 	private void Bate(){
 		if(Input.IsActionJustPressed("soco") && !IsPunching && !IsDashing){
 			IsPunching = true;
@@ -151,13 +196,15 @@ public partial class Namorado : CharacterBody2D
 		}
 	}
 	
+	/*Recebe o sinal do timeout do timer do soco e faz o tratamento*/
 	private void FimDoSoco(){
 		IsPunching = false;
 		Sprite.Frame = 0;
 		Soco.Monitoring = false;
 	}
 	
-	private void SocoColisao(Node2D bodyx){
-		GD.Print("Namorado acaba de executar um soco!");
+	/*Recebe o sinal da colisão do soco e faz o tratamento disso*/
+	private void SocoColisao(Node2D body){
+		GD.Print("Namorado acaba de executar um soco no "+body.Name+"!");
 	}
 }
