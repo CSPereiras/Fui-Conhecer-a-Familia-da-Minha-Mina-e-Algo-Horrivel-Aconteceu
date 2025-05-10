@@ -12,10 +12,12 @@ public partial class Chefe : CharacterBody2D
 	private CharacterBody2D player;
 	private Marker2D headPos;
 	private Vector2 viewSize;
+	private Timer timerGetBoyfriend;
 	[Signal]
 	public delegate void SurfaceEventHandler();
 	[Signal]
 	public delegate void JumpedEventHandler();
+	
 	public override void _Ready()
 	{
 		headPos = GetNode<Marker2D>("Head");
@@ -23,6 +25,8 @@ public partial class Chefe : CharacterBody2D
 		player = GetTree().Root.GetNode<Node2D>("Sala de Jantar").GetNode<CharacterBody2D>("Namorado");
 		Velocity = Vector2.One;
 		Surface += phases; Jumped += coolJump;
+		timerGetBoyfriend = GetNode<Timer>("TimerPegaNamorado");
+		timerGetBoyfriend.Timeout += getBoyfriend;
 	}
 
 	public override void _PhysicsProcess(double delta)
@@ -59,6 +63,7 @@ public partial class Chefe : CharacterBody2D
 			}
 		}
 		MoveAndSlide();
+		
 	}
 
 	private void phases(){
@@ -70,6 +75,7 @@ public partial class Chefe : CharacterBody2D
 				break;
 		}
 	}
+	
 	private async void coolJump(){
 		await ToSignal(GetTree().CreateTimer(cooldown), "timeout");
 		//GD.Print("Cool: "+cooldown);
@@ -128,5 +134,13 @@ public partial class Chefe : CharacterBody2D
 		}else{
 			Velocity = new Vector2(Dist.X/time, (Dist.Y/time)-Gravity*(float)Math.Pow(time,2)/2);
 		}
+	}
+	
+	public void dontGetBoyfriend(){
+		SetCollisionMaskValue(2, false);
+	}
+	
+	private void getBoyfriend(){
+		SetCollisionMaskValue(2, true);
 	}
 }

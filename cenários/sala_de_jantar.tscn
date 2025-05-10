@@ -10,6 +10,7 @@ size = Vector2(1152.5, 42)
 size = Vector2(20, 659)
 
 [node name="Sala de Jantar" type="Node2D"]
+position = Vector2(1, 0)
 
 [node name="Chao" type="StaticBody2D" parent="."]
 position = Vector2(580, 671)
@@ -34,6 +35,9 @@ shape = SubResource("RectangleShape2D_82dmm")
 
 [node name="Namorado" parent="." instance=ExtResource("1_g0b42")]
 position = Vector2(475, 610)
+collision_mask = 5
 
 [node name="Chefe" parent="." instance=ExtResource("2_82dmm")]
 position = Vector2(771, 585)
+collision_layer = 4
+collision_mask = 3

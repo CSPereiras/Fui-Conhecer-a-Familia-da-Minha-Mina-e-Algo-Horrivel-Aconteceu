@@ -121,6 +121,8 @@ public partial class Namorado : CharacterBody2D
 			Lifes--;
 			GD.Print("Vidas restantes: " + Lifes);
 			VerificaVidas();
+			SetCollisionMaskValue(3, false);
+			((Chefe)Colisor).dontGetBoyfriend();
 			TimerImunidade.Start();
 		}
 	} 
@@ -134,6 +136,7 @@ public partial class Namorado : CharacterBody2D
 	
 	/*Recebe o sinal do timeout do timer da imunidade e faz o tratamento*/
 	private void FimDaImunidade(){
+		SetCollisionMaskValue(3, true);
 		IsImmune = false;
 	}
 	
