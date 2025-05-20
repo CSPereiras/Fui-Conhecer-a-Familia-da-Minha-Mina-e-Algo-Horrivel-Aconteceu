@@ -1,5 +1,6 @@
-[gd_scene load_steps=5 format=3 uid="uid://ojjcnh4cjv8m"]
+[gd_scene load_steps=6 format=3 uid="uid://ojjcnh4cjv8m"]
 
+[ext_resource type="Script" uid="uid://dagtqs4dqv3kw" path="res://cenários/SalaDeJantar.cs" id="1_6h6pe"]
 [ext_resource type="PackedScene" uid="uid://e85dfftya6fs" path="res://Personagens/Namorado/namorado.tscn" id="1_g0b42"]
 [ext_resource type="PackedScene" uid="uid://dtfraxb01exs4" path="res://Personagens/Sogro/chefe.tscn" id="2_82dmm"]
 
@@ -11,6 +12,7 @@ size = Vector2(20, 659)
 
 [node name="Sala de Jantar" type="Node2D"]
 position = Vector2(1, 0)
+script = ExtResource("1_6h6pe")
 
 [node name="Chao" type="StaticBody2D" parent="."]
 position = Vector2(580, 671)

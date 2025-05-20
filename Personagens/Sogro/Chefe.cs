@@ -9,9 +9,11 @@ public partial class Chefe : CharacterBody2D
 	public const float JumpVelocity = -400.0f;
 	private float health = 0, cooldown = 1, damage = 1, actTime = 1; //Cooldown: time between actions, smaller means more aggresive
 	private int state = 0, onWall = 0, enable = 1, decideDir = 2; //onWall: 1 left, 0 none, -1 right
+	private AnimatedSprite2D spriteChefe;
 	private CharacterBody2D player;
 	private Marker2D headPos;
 	private Vector2 viewSize;
+	private CharacterBody2D boyfriend;
 	private Timer timerGetBoyfriend;
 	[Signal]
 	public delegate void SurfaceEventHandler();
@@ -24,9 +26,12 @@ public partial class Chefe : CharacterBody2D
 		viewSize = GetViewport().GetVisibleRect().Size;
 		player = GetTree().Root.GetNode<Node2D>("Sala de Jantar").GetNode<CharacterBody2D>("Namorado");
 		Velocity = Vector2.One;
-		Surface += phases; Jumped += coolJump;
+		Surface += phases; 
+		Jumped += coolJump;
+		spriteChefe = GetNode<AnimatedSprite2D>("SpriteChefe");
 		timerGetBoyfriend = GetNode<Timer>("TimerPegaNamorado");
 		timerGetBoyfriend.Timeout += getBoyfriend;
+		
 	}
 
 	public override void _PhysicsProcess(double delta)
@@ -43,8 +48,8 @@ public partial class Chefe : CharacterBody2D
 			Velocity = Vector2.Zero;
 			enable = 0;
 			cooldown = 3.5f;
-			GD.Print("Wall");
-			GD.Print(headPos.GlobalPosition.X < viewSize.X/2);
+			/*GD.Print("Wall");
+			GD.Print(headPos.GlobalPosition.X < viewSize.X/2);*/
 			if(headPos.GlobalPosition.X < viewSize.X/2)
 				onWall  = 1;
 			else
@@ -58,7 +63,7 @@ public partial class Chefe : CharacterBody2D
 			if(enable == 1){
 				enable = 0;
 				cooldown = 2;
-				GD.Print("Floor");
+				/*GD.Print("Floor");*/
 				EmitSignal(SignalName.Surface);
 			}
 		}
@@ -66,10 +71,14 @@ public partial class Chefe : CharacterBody2D
 		
 	}
 
+	//-------etapa 1
 	private void phases(){
 		switch(state){
 			case 0:
 				phase1();
+				break;
+			case 1:
+				phase2();
 				break;
 			default:
 				break;
@@ -80,10 +89,10 @@ public partial class Chefe : CharacterBody2D
 		await ToSignal(GetTree().CreateTimer(cooldown), "timeout");
 		//GD.Print("Cool: "+cooldown);
 		enable = 1;
-		GD.Print("Enabled");
+		/*GD.Print("Enabled");*/
 	}
 	private void phase1(){
-		GD.Print("Go");
+		/*GD.Print("Go");*/
 		whereGo();
 	}
 	private void whereGo(){
@@ -124,7 +133,7 @@ public partial class Chefe : CharacterBody2D
 			X = Math.Clamp(X, -headPos.GlobalPosition.X, viewSize.X-headPos.GlobalPosition.X);
 			Dist = new Vector2(X, player.Position.Y-headPos.GlobalPosition.Y);
 		}
-		GD.Print("Dist: "+Dist);
+		/*GD.Print("Dist: "+Dist);*/
 		setVelBoss(1, Dist);
 		EmitSignal(SignalName.Jumped);
 	}
@@ -136,10 +145,31 @@ public partial class Chefe : CharacterBody2D
 		}
 	}
 	
+	//-------etapa 2
+	private void phase2(){
+		GD.Print(boyfriend.Name);
+		//orientation();
+	}
+	
+	private void orientation(){
+		/*if(Namorado.Position.X-Position.X > 0){
+			SpriteChefe.FlipH = true;
+		}else{
+			SpriteChefe.FlipH = false;
+		}*/
+	}
+	
+	//-------interação com o namorado
+	public void informTheBoyfriend(CharacterBody2D lover){
+		boyfriend = lover;
+	}
+	
+	//Faz com que o Sogro não pegue o namorado
 	public void dontGetBoyfriend(){
 		SetCollisionMaskValue(2, false);
 	}
 	
+	//Faz com que o sogro volte a pegar o namorado (lá ele)
 	private void getBoyfriend(){
 		SetCollisionMaskValue(2, true);
 	}
