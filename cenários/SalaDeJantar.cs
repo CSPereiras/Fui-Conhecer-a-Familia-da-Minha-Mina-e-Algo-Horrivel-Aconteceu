@@ -9,7 +9,6 @@ public partial class SalaDeJantar : Node2D
 	public override void _Ready(){
 		Namorado = GetNode<Namorado>("Namorado");
 		Chefe = GetNode<Chefe>("Chefe");
-		Chefe.informTheBoyfriend(Namorado);
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.

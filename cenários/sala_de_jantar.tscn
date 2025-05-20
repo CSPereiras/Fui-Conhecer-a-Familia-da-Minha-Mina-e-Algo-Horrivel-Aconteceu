@@ -11,7 +11,6 @@ size = Vector2(1152.5, 42)
 size = Vector2(20, 659)
 
 [node name="Sala de Jantar" type="Node2D"]
-position = Vector2(1, 0)
 script = ExtResource("1_6h6pe")
 
 [node name="Chao" type="StaticBody2D" parent="."]
@@ -41,6 +40,4 @@ collision_mask = 5
 
 [node name="Chefe" parent="." instance=ExtResource("2_82dmm")]
 position = Vector2(620, 454)
-actTime = 0.6
 collision_layer = 4
-collision_mask = 3

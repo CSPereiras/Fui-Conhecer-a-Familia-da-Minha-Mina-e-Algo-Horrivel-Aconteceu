@@ -122,7 +122,6 @@ public partial class Namorado : CharacterBody2D
 			GD.Print("Vidas restantes: " + Lifes);
 			VerificaVidas();
 			SetCollisionMaskValue(3, false);
-			((Chefe)Colisor).dontGetBoyfriend();
 			TimerImunidade.Start();
 		}
 	} 
