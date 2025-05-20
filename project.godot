@@ -87,6 +87,7 @@ dash={
 
 2d_physics/layer_1="Parede"
 2d_physics/layer_2="Namorado"
+2d_physics/layer_3="Chefe"
 
 [rendering]
 
