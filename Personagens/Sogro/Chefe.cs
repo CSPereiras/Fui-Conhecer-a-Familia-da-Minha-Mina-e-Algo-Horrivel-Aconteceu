@@ -12,7 +12,7 @@ public partial class Chefe : CharacterBody2D
 	private float health = 0, cooldown = 1, damage = 1; //Cooldown: time between actions, smaller means more aggresive
 	private int state = 0, onWall = 0, enable = 1, decideDir = 2; //onWall: 1 left, 0 none, -1 right
 	private CharacterBody2D player;
-	private Marker2D headPos;
+	private Marker2D headPos, lPos, rPos;
 	private Vector2 viewSize;
 	[Signal]
 	public delegate void SurfaceEventHandler();
@@ -20,7 +20,7 @@ public partial class Chefe : CharacterBody2D
 	public delegate void JumpedEventHandler();
 	public override void _Ready()
 	{
-		headPos = GetNode<Marker2D>("Head");
+		headPos = GetNode<Marker2D>("Head"); lPos = GetNode<Marker2D>("Left"); rPos = GetNode<Marker2D>("Right");
 		viewSize = GetViewport().GetVisibleRect().Size;
 		player = GetTree().Root.GetNode<Node2D>("Sala de Jantar").GetNode<CharacterBody2D>("Namorado");
 		Velocity = Vector2.One;
@@ -36,7 +36,7 @@ public partial class Chefe : CharacterBody2D
 		else{
 			Velocity = Vector2.Zero;
 		}
-		if(IsOnWallBoss()){
+		if(IsOnWallBoss() || onWall != 0){
 			Velocity = Vector2.Zero;
 			if(enable == 1){
 				enable = 0;
@@ -53,7 +53,8 @@ public partial class Chefe : CharacterBody2D
 		}
 		if(IsOnFloor()){
 			onWall = 0;
-			Velocity = Vector2.Zero;
+			if(!IsOnWallBoss())
+				Velocity = Vector2.Zero;
 			if(enable == 1){
 				enable = 0;
 				cooldown = 2;
@@ -75,9 +76,10 @@ public partial class Chefe : CharacterBody2D
 				break;
 		}
 	}
+
 	private async void coolJump(){
 		await ToSignal(GetTree().CreateTimer(cooldown), "timeout");
-		//GD.Print("Cool: "+cooldown);
+		GD.Print("Cool: "+cooldown);
 		enable = 1;
 		GD.Print("Enabled");
 	}
@@ -114,36 +116,28 @@ public partial class Chefe : CharacterBody2D
 		//GD.Print(":: "+dir);
 		double jumpWindow = viewSize.Y*(float)0.5;
 		float whereJump = viewSize.Y-(float)GD.RandRange(jumpWindow, jumpWindow*1.8)-headPos.GlobalPosition.Y;
-		GD.Print("Where: "+whereJump);
+		//GD.Print("Where: "+whereJump);
 		Vector2 Dist;
 		if(onWall == 0)
 			Dist = new Vector2((1-dir)/2*viewSize.X-headPos.GlobalPosition.X, whereJump);
 		else{
-			float X = (player.Position.X) -headPos.GlobalPosition.X + (float)GD.RandRange(-viewSize.X*0.1,viewSize.X*0.1);
+			float X = (player.Position.X) -headPos.GlobalPosition.X + (float)GD.RandRange(-viewSize.X*0.08,viewSize.X*0.08);
 			X = Math.Clamp(X, -headPos.GlobalPosition.X, viewSize.X-headPos.GlobalPosition.X);
-			Dist = new Vector2(X, player.Position.Y-headPos.GlobalPosition.Y);
+			if(X+lPos.GlobalPosition.X<0) X = (player.Position.X) -headPos.GlobalPosition.X + viewSize.X*0.05f;
+			if(X+rPos.GlobalPosition.X>viewSize.X) X = (player.Position.X) -headPos.GlobalPosition.X - viewSize.X*0.05f;
+			Dist = new Vector2(X, headPos.GlobalPosition.Y);
 		}
 		GD.Print("Dist: "+Dist);
 		setVelBoss(actTime, Dist);
+		onWall = 0;
 		EmitSignal(SignalName.Jumped);
 	}
 	private void setVelBoss(float time, Vector2 Dist){
-		/*
-		if(onWall == 0){
-			Velocity = new Vector2(Dist.X/time, -time*Gravity);
-		}else{
-			Velocity = new Vector2(Dist.X/time, (Dist.Y/time)-Gravity*(float)Math.Pow(time,2)/2);
-		}*/
-		Velocity = new Vector2(Dist.X/time, (Dist.Y/time)-Gravity*(float)Math.Pow(time,2)/2);
+		Velocity = new Vector2(Dist.X/time, (Dist.Y/time)-Gravity*time/2);
+		GD.Print(Velocity);
 	}
 	public bool IsOnWallBoss(){
-		for (int i = 0; i < GetSlideCollisionCount(); i++)
-		{
-			KinematicCollision2D collision = GetSlideCollision(i);
-			if(((String)(collision.GetCollider() as Node).Name).Contains("Parede")){
-				return true;
-			}
-		}
+		if(lPos.GlobalPosition.X <= 0 || rPos.GlobalPosition.X >= viewSize.X) return true;
 		return false;
 	}
 }

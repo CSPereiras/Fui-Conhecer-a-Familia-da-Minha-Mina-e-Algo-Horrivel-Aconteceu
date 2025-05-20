@@ -37,4 +37,4 @@ position = Vector2(50, 583)
 
 [node name="Chefe" parent="." instance=ExtResource("2_82dmm")]
 position = Vector2(620, 454)
-actTime = 0.5
+actTime = 0.6
