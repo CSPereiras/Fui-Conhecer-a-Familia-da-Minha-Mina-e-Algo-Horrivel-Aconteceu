@@ -6,11 +6,11 @@ public partial class Chefe : CharacterBody2D
 	/*a velocidade e impulso tá menor que a do namorado que fiz. Isso é algo
 	que devemos mexer, provavelmente*/
 	[Export]
-		private float actTime = 1; 
+	private float actTime = 1; 
 	public const float Speed = 300.0f, Gravity = 980f; 
 	public const float JumpVelocity = -400.0f;
 	private float health = 0, cooldown = 1, damage = 1; //Cooldown: time between actions, smaller means more aggresive
-	private int state = 0, onWall = 0, enable = 1, decideDir = 2; //onWall: 1 left, 0 none, -1 right
+	private int state = 1, onWall = 0, enable = 1, decideDir = 2; //onWall: 1 left, 0 none, -1 right
 	private AnimatedSprite2D spriteChefe;
 	private CharacterBody2D player;
 	private Marker2D headPos, lPos, rPos;
@@ -60,7 +60,9 @@ public partial class Chefe : CharacterBody2D
 			if(!IsOnWallBoss())
 				Velocity = Vector2.Zero;
 			if(enable == 1){
-				enable = 0;
+				if(state==0){
+					enable = 0;
+				}
 				cooldown = 2;
 				/*GD.Print("Floor");*/
 				EmitSignal(SignalName.Surface);
@@ -69,6 +71,7 @@ public partial class Chefe : CharacterBody2D
 		
 
 		MoveAndSlide();
+		orientation();
 		
 	}
 
@@ -92,6 +95,20 @@ public partial class Chefe : CharacterBody2D
 		enable = 1;
 		/*GD.Print("Enabled");*/
 	}
+	private void orientation(){
+		/*if(getPlayerPosition()){
+			//GD.Print(getPlayerPosition());
+			spriteChefe.FlipH = false;
+		}else{
+			//GD.Print(getPlayerPosition());
+			spriteChefe.FlipH = true;
+		}*/
+		spriteChefe.FlipH = !getPlayerPosition(); 
+	}
+	private bool getPlayerPosition(){
+		return player.Position.X-Position.X > 0;
+	}
+	
 	private void phase1(){
 		/*GD.Print("Go");*/
 		whereGo();
@@ -151,16 +168,21 @@ public partial class Chefe : CharacterBody2D
 	}
 	
 	//-------etapa 2
+	bool isRunningOver = false;
+	Vector2 direction = new Vector2();
 	private void phase2(){
-		
-		//orientation();
+		tryRunOver();
 	}
-	
-	private void orientation(){
-		/*if(Namorado.Position.X-Position.X > 0){
-			SpriteChefe.FlipH = true;
-		}else{
-			SpriteChefe.FlipH = false;
-		}*/
+	private void tryRunOver(){
+		if(isRunningOver){
+			if(spriteChefe.FlipH){
+				direction.X = -1;
+			}else{
+				direction.X = 1;
+			}
+			isRunningOver = false;
+		}
+		Velocity = direction * Speed;
+		GD.Print(Velocity);
 	}
 }
