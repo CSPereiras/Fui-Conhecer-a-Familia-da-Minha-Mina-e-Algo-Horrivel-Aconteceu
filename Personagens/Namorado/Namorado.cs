@@ -118,13 +118,17 @@ public partial class Namorado : CharacterBody2D
 	private void AdministraColisao(Node2D Colisor){
 		if(Colisor.Name.Equals("Chefe") && !IsImmune){
 			IsImmune = true;
-			Lifes--;
-			GD.Print("Vidas restantes: " + Lifes);
-			VerificaVidas();
+			Dano();
 			SetCollisionMaskValue(3, false);
 			TimerImunidade.Start();
 		}
 	} 
+	
+	public void Dano(){
+		Lifes--;
+		GD.Print("Vidas restantes: " + Lifes);
+		VerificaVidas();
+	}
 	
 	/*Verifica quantas vidas tem e, caso seja zero, o jogador morre*/
 	private void VerificaVidas(){

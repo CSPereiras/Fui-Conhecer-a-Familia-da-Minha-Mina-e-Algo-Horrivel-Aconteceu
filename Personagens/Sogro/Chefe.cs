@@ -13,7 +13,7 @@ public partial class Chefe : CharacterBody2D
 	private bool enableGrav = true, checkVelNearZero = false, enableFall = false;
 	private AnimatedSprite2D spriteChefe;
 	private CharacterBody2D player;
-	private Marker2D headPos, lPos, rPos;
+	private Marker2D headPos, lPos, rPos, dPos;
 	private Vector2 viewSize;
 	[Signal]
 	public delegate void PhaseTransEventHandler();
@@ -24,7 +24,7 @@ public partial class Chefe : CharacterBody2D
 
 	public override void _Ready()
 	{
-		headPos = GetNode<Marker2D>("Head"); lPos = GetNode<Marker2D>("Left"); rPos = GetNode<Marker2D>("Right");
+		headPos = GetNode<Marker2D>("Head"); lPos = GetNode<Marker2D>("Left"); rPos = GetNode<Marker2D>("Right"); dPos = GetNode<Marker2D>("Down");
 		viewSize = GetViewport().GetVisibleRect().Size;
 		player = GetTree().Root.GetNode<Node2D>("Sala de Jantar").GetNode<CharacterBody2D>("Namorado");
 		Velocity = Vector2.One;
@@ -79,14 +79,6 @@ public partial class Chefe : CharacterBody2D
 				EmitSignal(SignalName.PhaseTrans);
 			}
 		}
-		if (player.GlobalPosition.X - GlobalPosition.X < 0)
-		{
-			spriteChefe.FlipH = true;
-		}
-		else
-		{
-			spriteChefe.FlipH = false;
-		}
 		if (enable == 1 && state != 0)
 		{
 			enable = 0;
@@ -99,8 +91,9 @@ public partial class Chefe : CharacterBody2D
 			GD.Print(state);
 		}*/
 		MoveAndSlide();
+		orientation();
 	}
-
+	
 	//-------etapa 1
 	private void Phases()
 	{
@@ -133,6 +126,20 @@ public partial class Chefe : CharacterBody2D
 		enable = 1;
 		/*GD.Print("Enabled");*/
 	}
+	private void orientation(){
+		/*if(getPlayerPosition()){
+			//GD.Print(getPlayerPosition());
+			spriteChefe.FlipH = false;
+		}else{
+			//GD.Print(getPlayerPosition());
+			spriteChefe.FlipH = true;
+		}*/
+		spriteChefe.FlipH = !getPlayerPosition(); 
+	}
+	private bool getPlayerPosition(){
+		return player.Position.X-Position.X > 0;
+	}
+
 	private void Phase1()
 	{
 		if (decideDir == 2)
@@ -175,7 +182,7 @@ public partial class Chefe : CharacterBody2D
 		}
 		else
 		{
-			Dist = new Vector2(JumpToPlayerX(), viewSize.Y-headPos.GlobalPosition.Y);
+			Dist = new Vector2(JumpToPlayerX(), viewSize.Y-dPos.GlobalPosition.Y);
 		}
 		//GD.Print("Dist: "+Dist+" Player: "+player.GlobalPosition+ " Boss"+ GlobalPosition);
 		SetVelBoss(actTime1, Dist);
@@ -191,10 +198,10 @@ public partial class Chefe : CharacterBody2D
 	}
 	private float JumpToPlayerX()
 	{
-		float X = player.GlobalPosition.X - headPos.GlobalPosition.X+ (float)GD.RandRange(-viewSize.X * 0.01, viewSize.X * 0.01);
-		X = Math.Clamp(X, -headPos.GlobalPosition.X, viewSize.X - headPos.GlobalPosition.X);
-		if (X + lPos.GlobalPosition.X < 50) X = player.GlobalPosition.X - headPos.GlobalPosition.X + viewSize.X * 0.05f;
-		if (X + rPos.GlobalPosition.X > viewSize.X-50) X = player.GlobalPosition.X - headPos.GlobalPosition.X - viewSize.X * 0.05f;
+		float X = player.GlobalPosition.X - GlobalPosition.X+ (float)GD.RandRange(-viewSize.X * 0.01, viewSize.X * 0.01);
+		X = Math.Clamp(X, -GlobalPosition.X, viewSize.X - GlobalPosition.X);
+		if (X + lPos.GlobalPosition.X < 50) X = player.GlobalPosition.X - GlobalPosition.X + viewSize.X * 0.05f; 
+		if (X + rPos.GlobalPosition.X > viewSize.X - 50) X = player.GlobalPosition.X - GlobalPosition.X - viewSize.X * 0.05f; 
 		return X;
 	}
 	private void SetVelBoss(float time, Vector2 Dist)
@@ -218,19 +225,22 @@ public partial class Chefe : CharacterBody2D
 	}
 
 	//-------etapa 2
-	private void phase2()
-	{
-
-		//orientation();
+	bool isRunningOver = false;
+	Vector2 direction = new Vector2();
+	private void phase2(){
+		tryRunOver();
 	}
-
-	private void orientation()
-	{
-		/*if(Namorado.Position.X-Position.X > 0){
-			SpriteChefe.FlipH = true;
-		}else{
-			SpriteChefe.FlipH = false;
-		}*/
+	private void tryRunOver(){
+		if(isRunningOver){
+			if(spriteChefe.FlipH){
+				direction.X = -1;
+			}else{
+				direction.X = 1;
+			}
+			isRunningOver = false;
+		}
+		Velocity = direction * Speed;
+		//GD.Print(Velocity);
 	}
 	private void Phase3()
 	{

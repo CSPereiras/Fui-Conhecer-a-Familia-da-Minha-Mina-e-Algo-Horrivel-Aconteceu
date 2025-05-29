@@ -37,5 +37,8 @@ position = Vector2(-39, 0)
 [node name="Right" type="Marker2D" parent="."]
 position = Vector2(39, 0)
 
+[node name="Down" type="Marker2D" parent="."]
+position = Vector2(0, 62)
+
 [node name="TimerPegaNamorado" type="Timer" parent="."]
 one_shot = true
