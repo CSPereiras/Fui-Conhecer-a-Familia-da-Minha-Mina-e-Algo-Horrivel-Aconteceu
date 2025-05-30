@@ -10,17 +10,13 @@ public partial class Chefe : CharacterBody2D
 	public const float Speed = 500.0f, G = 980f, JumpV = -900.0f, maxHealth = 100;
 	private float cooldown = 1, damage = 1, trackingFactor = 0.7f; //Cooldown: time between actions, smaller means more aggresive
 	private int state = 0, onWall = 0, enable = 1, decideDir = 2; //onWall: 1 left, 0 none, -1 right
-	private bool enableGrav = true, checkVelNearZero = false, enableFall = false;
+	private bool enableGrav = true, checkVelNearZero = false, enableFall = false, enableShock = false;
 	private AnimatedSprite2D spriteChefe;
 	private CharacterBody2D player;
 	private Marker2D headPos, lPos, rPos, dPos;
 	private Vector2 viewSize;
-	[Signal]
-	public delegate void PhaseTransEventHandler();
-	[Signal]
-	public delegate void FallImpactEventHandler();
-	[Signal]
-	public delegate void JumpedEventHandler();
+	[Signal] public delegate void PhaseTransEventHandler(); [Signal] public delegate void FallImpactEventHandler();
+	[Signal] public delegate void JumpedEventHandler();
 
 	public override void _Ready()
 	{
@@ -28,9 +24,7 @@ public partial class Chefe : CharacterBody2D
 		viewSize = GetViewport().GetVisibleRect().Size;
 		player = GetTree().Root.GetNode<Node2D>("Sala de Jantar").GetNode<CharacterBody2D>("Namorado");
 		Velocity = Vector2.One;
-		PhaseTrans += Phases;
-		Jumped += CoolJump;
-		FallImpact += FallDownImpact;
+		PhaseTrans += Phases; Jumped += CoolJump; FallImpact += FallDownImpact;
 		spriteChefe = GetNode<AnimatedSprite2D>("SpriteChefe");
 	}
 
@@ -244,20 +238,28 @@ public partial class Chefe : CharacterBody2D
 	}
 	private void Phase3()
 	{
-		if (!checkVelNearZero && IsOnFloor())
+		if (IsOnFloor())
 		{
-			Velocity = new Vector2(0, JumpVelocity);
-			checkVelNearZero = true;
+			if (!checkVelNearZero)
+			{
+				Velocity = new Vector2(0, JumpVelocity);
+				checkVelNearZero = true;
+			}
+			if (enableShock)
+			{
+				GetTree().Root.GetChild(0).AddChild(new CreateShockWave(dPos.GlobalPosition.X, viewSize.Y));
+				enableShock = false;
+			}
 		}
 		if (!enableFall)
-		{
-			float VelX = player.GlobalPosition.X - headPos.GlobalPosition.X;
-			float AbsVelX = Math.Abs(VelX);
-			if (AbsVelX < 10) VelX = 0;
-			else if (AbsVelX < Speed) VelX *= Speed / AbsVelX;
-			Velocity = new Vector2(VelX*trackingFactor, Velocity.Y);
-			//GD.Print("P3: "+Velocity);
-		}
+			{
+				float VelX = player.GlobalPosition.X - headPos.GlobalPosition.X;
+				float AbsVelX = Math.Abs(VelX);
+				if (AbsVelX < 10) VelX = 0;
+				else if (AbsVelX < Speed) VelX *= Speed / AbsVelX;
+				Velocity = new Vector2(VelX * trackingFactor, Velocity.Y);
+				//GD.Print("P3: "+Velocity);
+			}
 		enable = 1;
 	}
 	private void ChangePhase()
@@ -306,8 +308,9 @@ public partial class Chefe : CharacterBody2D
 		enableFall = enableGrav = true;
 		Velocity = new Vector2(0, -JumpVelocity);
 		Gravity = 3*G;
-		//implement shockwave
-		await ToSignal(GetTree().CreateTimer(baseCool), "timeout");
+		//shocka and wait
+		enableShock = true;
+		await ToSignal(GetTree().CreateTimer(GD.RandRange(baseCool*1.2,baseCool * 2)), "timeout");
 		Gravity = G;
 		enableFall = checkVelNearZero = false;
 	}
