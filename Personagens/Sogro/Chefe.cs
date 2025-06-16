@@ -6,32 +6,29 @@ public partial class Chefe : CharacterBody2D
 	/*a velocidade e impulso tá menor que a do namorado que fiz. Isso é algo
 	que devemos mexer, provavelmente*/
 	[Export]
-	private float actTime = 1; 
-	public const float Speed = 300.0f, Gravity = 980f; 
-	public const float JumpVelocity = -400.0f;
-	private float health = 0, cooldown = 1, damage = 1; //Cooldown: time between actions, smaller means more aggresive
-	private int state = 1, onWall = 0, enable = 1, decideDir = 2; //onWall: 1 left, 0 none, -1 right
+	private float actTime1 = 1, Gravity = G, JumpVelocity = JumpV, health = maxHealth, baseCool = 1;
+	public const float Speed = 500.0f, G = 980f, JumpV = -900.0f, maxHealth = 100;
+	private float cooldown = 1, damage = 1, trackingFactor = 0.7f; //Cooldown: time between actions, smaller means more aggresive
+	private int state = 0, onWall = 0, enable = 1, decideDir = 2; //onWall: 1 left, 0 none, -1 right
 	private bool canFlip = true;
+	private bool enableGrav = true, checkVelNearZero = false, enableFall = false, enableShock = false;
 	private AnimatedSprite2D spriteChefe;
 	private CharacterBody2D player;
 	private bool isBodyPlayer = false;
 	private Timer timerWall, timerPush;
 	private Area2D afastaDir, afastaEsq;
-	private Marker2D headPos, lPos, rPos;
+	private Marker2D headPos, lPos, rPos, dPos;
 	private Vector2 viewSize;
-	[Signal]
-	public delegate void SurfaceEventHandler();
-	[Signal]
-	public delegate void JumpedEventHandler();
-	
+	[Signal] public delegate void PhaseTransEventHandler(); [Signal] public delegate void FallImpactEventHandler();
+	[Signal] public delegate void JumpedEventHandler();
+
 	public override void _Ready()
 	{
-		headPos = GetNode<Marker2D>("Head"); lPos = GetNode<Marker2D>("Left"); rPos = GetNode<Marker2D>("Right");
+		headPos = GetNode<Marker2D>("Head"); lPos = GetNode<Marker2D>("Left"); rPos = GetNode<Marker2D>("Right"); dPos = GetNode<Marker2D>("Down");
 		viewSize = GetViewport().GetVisibleRect().Size;
 		player = GetTree().Root.GetNode<Node2D>("Sala de Jantar").GetNode<CharacterBody2D>("Namorado");
 		Velocity = Vector2.One;
-		Surface += phases; 
-		Jumped += coolJump;
+		PhaseTrans += Phases; Jumped += CoolJump; FallImpact += FallDownImpact;
 		spriteChefe = GetNode<AnimatedSprite2D>("SpriteChefe");
 		timerWall = GetNode<Timer>("TimerWall");
 		timerWall.Timeout += backToTryOver;
@@ -47,45 +44,58 @@ public partial class Chefe : CharacterBody2D
 
 	public override void _PhysicsProcess(double delta)
 	{
-		if(!Velocity.IsZeroApprox()){
-			if(!IsOnWallBoss() && !IsOnFloor())
-				Velocity = new Vector2(Velocity.X, Velocity.Y+Gravity*(float)delta);
+		ChangePhase();
+		if (!Velocity.IsZeroApprox())
+		{
+			if (!IsOnWallBoss() && !IsOnFloor() && enableGrav)
+				Velocity = new Vector2(Velocity.X, Velocity.Y + Gravity * (float)delta);
 		}
-		else{
+		else
+		{
 			Velocity = Vector2.Zero;
 		}
-		if(IsOnWallBoss() || onWall != 0){
+		if ((IsOnWallBoss() || onWall != 0) && state == 0)
+		{
 			Velocity = Vector2.Zero;
-			cooldown = 3.5f;
+			cooldown = baseCool*3;
 			/*GD.Print("Wall");
 			GD.Print(headPos.GlobalPosition.X < viewSize.X/2);*/
-			if(headPos.GlobalPosition.X < viewSize.X/2)
-				onWall  = 1;
+			if (headPos.GlobalPosition.X < viewSize.X / 2)
+				onWall = 1;
 			else
 				onWall = -1;
 			decideDir = -onWall;
 			if(enable == 1 && state == 0){
 				enable = 0;
-				EmitSignal(SignalName.Surface);
+				//GD.Print("WallPhase");
+				EmitSignal(SignalName.PhaseTrans);
 			}
 		}
-		if(IsOnFloor()){
-			if(state == 0){
-				onWall = 0;
-			}
-			if(!IsOnWallBoss())
-				Velocity = Vector2.Zero;
-			if(enable == 1){
-				if(state==0){
-					enable = 0;
-				}
-				cooldown = 2;
-				/*GD.Print("Floor");*/
-				EmitSignal(SignalName.Surface);
-			}
-		}
-		
 
+		if (IsOnFloor())
+		{
+			onWall = 0;
+			if (!IsOnWallBoss() && state == 0)
+				Velocity = Vector2.Zero;
+			if (enable == 1 && state == 0)
+			{
+				cooldown = baseCool*2;
+				enable = 0;
+				//GD.Print("FloorPhase");
+				EmitSignal(SignalName.PhaseTrans);
+			}
+		}
+		if (enable == 1 && state != 0)
+		{
+			enable = 0;
+			EmitSignal(SignalName.PhaseTrans);
+		}
+		/*
+		if (Input.IsActionJustPressed("soco"))
+		{
+			health -= 25;
+			GD.Print(state);
+		}*/
 		MoveAndSlide();
 		orientation();
 	}
@@ -99,87 +109,126 @@ public partial class Chefe : CharacterBody2D
 	}
 	private bool getPlayerPosition(){
 		return player.Position.X-Position.X > 0;
-	}
 
+	}
+	
 	//-------etapa 1
-	private void phases(){
-		switch(state){
+	private void Phases()
+	{
+		switch (state)
+		{
 			case 0:
-				phase1();
+				Phase1();
 				break;
 			case 1:
 				phase2();
+				break;
+			case 2:
+				if (checkVelNearZero && ChangedDirectionY(Velocity.Y))
+				{
+					//GD.Print("Fall Impact");
+					Velocity = Vector2.Zero; enableGrav = false;
+					EmitSignal(SignalName.FallImpact);
+				}
+				Phase3();
 				break;
 			default:
 				break;
 		}
 	}
-	
-	private async void coolJump(){
+
+	private async void CoolJump()
+	{
 		await ToSignal(GetTree().CreateTimer(cooldown), "timeout");
 		//GD.Print("Cool: "+cooldown);
 		enable = 1;
 		/*GD.Print("Enabled");*/
 	}
-	
-	private void phase1(){
-		/*GD.Print("Go");*/
-		whereGo();
-	}
-	private void whereGo(){
-		//GD.Print("ON: "+ onWall);
-		if(decideDir == 2){
-			if(GD.Randi()%2 == 1){
-				jumpNow(1);
+
+	private void Phase1()
+	{
+		if (decideDir == 2)
+		{
+			if (GD.Randi() % 2 == 1)
+			{
+				JumpNow(1, onWall);
 				decideDir = -1;
-			}else{
-				jumpNow(-1);
+			}
+			else
+			{
+				JumpNow(-1, onWall);
 				decideDir = 1;
 			}
 			return;
 		}
-			
-		switch(onWall){
+
+		switch (onWall)
+		{
 			case 0:
-				jumpNow(decideDir);
+				JumpNow(decideDir, onWall);
 				break;
 			case 1:
-				jumpNow(-1);
+				JumpNow(-1, onWall);
 				break;
 			case -1:
-				jumpNow(1);
+				JumpNow(1, onWall);
 				break;
 		}
 	}
-	private void jumpNow(int dir){
+	private void JumpNow(int dir, int mode)
+	{
 		//GD.Print(":: "+dir);
-		double jumpWindow = viewSize.Y*(float)0.5;
-		float whereJump = viewSize.Y-(float)GD.RandRange(jumpWindow, jumpWindow*1.8)-headPos.GlobalPosition.Y;
+		float whereJump = JumpWindowY();
 		//GD.Print("Where: "+whereJump);
 		Vector2 Dist;
-		if(onWall == 0)
-			Dist = new Vector2((1-dir)/2*viewSize.X-headPos.GlobalPosition.X, whereJump);
-		else{
-			float X = (player.Position.X) -headPos.GlobalPosition.X + (float)GD.RandRange(-viewSize.X*0.08,viewSize.X*0.08);
-			X = Math.Clamp(X, -headPos.GlobalPosition.X, viewSize.X-headPos.GlobalPosition.X);
-			if(X+lPos.GlobalPosition.X<0) X = (player.Position.X) -headPos.GlobalPosition.X + viewSize.X*0.05f;
-			if(X+rPos.GlobalPosition.X>viewSize.X) X = (player.Position.X) -headPos.GlobalPosition.X - viewSize.X*0.05f;
-			Dist = new Vector2(X, headPos.GlobalPosition.Y);
+		if (mode == 0)
+		{
+			Dist = new Vector2((1 - dir) / 2 * viewSize.X - headPos.GlobalPosition.X, whereJump);
 		}
-		//GD.Print("Dist: "+Dist);
-		setVelBoss(actTime, Dist);
+		else
+		{
+			Dist = new Vector2(JumpToPlayerX(), viewSize.Y-dPos.GlobalPosition.Y);
+		}
+		//GD.Print("Dist: "+Dist+" Player: "+player.GlobalPosition+ " Boss"+ GlobalPosition);
+		SetVelBoss(actTime1, Dist);
 		onWall = 0;
 		EmitSignal(SignalName.Jumped);
 	}
-	private void setVelBoss(float time, Vector2 Dist){
-		Velocity = new Vector2(Dist.X/time, (Dist.Y/time)-Gravity*time/2);
-		//GD.Print(Velocity);
+
+	private float JumpWindowY()
+	{
+		double jumpWindow = viewSize.Y * (float)0.5;
+		float whereJump = viewSize.Y - (float)GD.RandRange(jumpWindow, jumpWindow * 1.8) - headPos.GlobalPosition.Y;
+		return whereJump;
 	}
-	public bool IsOnWallBoss(){
-		if(lPos.GlobalPosition.X <= 0 || rPos.GlobalPosition.X >= viewSize.X) return true;
+	private float JumpToPlayerX()
+	{
+		float X = player.GlobalPosition.X - GlobalPosition.X+ (float)GD.RandRange(-viewSize.X * 0.01, viewSize.X * 0.01);
+		X = Math.Clamp(X, -GlobalPosition.X, viewSize.X - GlobalPosition.X);
+		if (X + lPos.GlobalPosition.X < 50) X = player.GlobalPosition.X - GlobalPosition.X + viewSize.X * 0.05f; 
+		if (X + rPos.GlobalPosition.X > viewSize.X - 50) X = player.GlobalPosition.X - GlobalPosition.X - viewSize.X * 0.05f; 
+		return X;
+	}
+	private void SetVelBoss(float time, Vector2 Dist)
+	{
+		Velocity = new Vector2(Dist.X / time, (Dist.Y / time) - Gravity * time/ 2);
+		//GD.Print("Boss Vel: "+Velocity+" Boss Pos: "+ GlobalPosition+" Player: "+ player.GlobalPosition);
+	}
+	public bool IsOnWallBoss()
+	{
+		if (lPos.GlobalPosition.X <= 0)
+		{
+			GlobalPosition = new Vector2(-lPos.Position.X, GlobalPosition.Y);
+			return true;
+		}
+		if (rPos.GlobalPosition.X >= viewSize.X)
+		{
+			GlobalPosition = new Vector2(viewSize.X-rPos.Position.X, GlobalPosition.Y);
+			return true;
+		}
 		return false;
 	}
-	
+
 	//-------etapa 2
 	bool isRunningOver = true;
 	bool backupWall = false;
@@ -243,5 +292,96 @@ public partial class Chefe : CharacterBody2D
 	private void endPush(){
 		//GD.Print("Acabou em " + Time.GetTicksMsec());
 		isRunningOver = true;
+	}
+
+	//etapa 3
+	private void Phase3()
+	{
+		if (IsOnFloor())
+		{
+			if (!checkVelNearZero)
+			{
+				Velocity = new Vector2(0, JumpVelocity);
+				checkVelNearZero = true;
+			}
+			if (enableShock)
+			{
+				GetTree().Root.GetChild(0).AddChild(new CreateShockWave(dPos.GlobalPosition.X, viewSize.Y));
+				enableShock = false;
+			}
+		}
+		if (!enableFall)
+			{
+				float VelX = player.GlobalPosition.X - headPos.GlobalPosition.X;
+				float AbsVelX = Math.Abs(VelX);
+				if (AbsVelX < 10) VelX = 0;
+				else if (AbsVelX < Speed) VelX *= Speed / AbsVelX;
+				Velocity = new Vector2(VelX * trackingFactor, Velocity.Y);
+				//GD.Print("P3: "+Velocity);
+			}
+		enable = 1;
+	}
+	private void ChangePhase()
+	{
+		float perc = (float)(health / maxHealth);
+		if (perc >= .8f)
+		{
+			int phase = 0;
+			if (state != phase) enable = 1;
+			state = phase;
+		}
+		else if (perc >= .6f)
+		{
+			int phase = 1;
+			if (state != phase) enable = 1;
+			state = phase;
+		}
+		else if (perc >= .4f)
+		{
+			int phase = 2;
+			if (state != phase) enable = 1;
+			state = phase;
+		}
+		else if (perc >= .2f)
+		{
+			int phase = 3;
+			if (state != phase) enable = 1;
+			state = phase;
+		}
+		else if (perc > 0)
+		{
+			int phase = 4;
+			if (state != phase) enable = 1;
+			state = phase;
+		}
+		else
+		{
+			int phase = -1;
+			if (state != phase) enable = 1;
+			state = phase;
+		}
+	}
+	private async void FallDownImpact()
+	{
+		await ToSignal(GetTree().CreateTimer(baseCool), "timeout");
+		enableFall = enableGrav = true;
+		Velocity = new Vector2(0, -JumpVelocity);
+		Gravity = 3*G;
+		//shocka and wait
+		enableShock = true;
+		await ToSignal(GetTree().CreateTimer(GD.RandRange(baseCool*1.2,baseCool * 2)), "timeout");
+		Gravity = G;
+		enableFall = checkVelNearZero = false;
+	}
+	public static bool IsZeroApprox(float val)
+	{
+		const float EPSILON = 0.00001f;
+		if (val <= EPSILON && val >= EPSILON) return true;
+		return false;
+	}
+	public static bool ChangedDirectionY(float val)
+	{
+		if (val < 0 && val + G / 60 > 0) return true;
+		return false;
 	}
 }

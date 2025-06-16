@@ -123,7 +123,7 @@ public partial class Namorado : CharacterBody2D
 		}
 	} 
 	
-	private void Dano(){
+	public void Dano(){
 		Lifes--;
 		GD.Print("Vidas restantes: " + Lifes);
 		VerificaVidas();
