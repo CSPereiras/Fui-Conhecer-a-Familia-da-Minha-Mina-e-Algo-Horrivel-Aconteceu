@@ -88,7 +88,6 @@ public partial class Namorado : CharacterBody2D
 				Direction = (int)inputDirection.X;
 			}
 			Velocity = inputDirection * Speed;
-			/*MoveAndSlide();*/
 		}
 		
 		AdministraSprite();
@@ -212,5 +211,13 @@ public partial class Namorado : CharacterBody2D
 	/*Recebe o sinal da colisão do soco e faz o tratamento disso*/
 	private void SocoColisao(Node2D body){
 		GD.Print("Namorado acaba de executar um soco no "+body.Name+"!");
+	}
+	
+	/*É empurrado pelo chefe*/
+	public void EhEmpurrado(){
+		//GD.Print("é pra ser empurrado aqui no momento " + Time.GetTicksMsec());
+		Vector2 AuxEmpurra = new Vector2(15000*Direction*(-1), 0);
+		Velocity = AuxEmpurra;
+		MoveAndSlide();
 	}
 }

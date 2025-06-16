@@ -11,8 +11,12 @@ public partial class Chefe : CharacterBody2D
 	public const float JumpVelocity = -400.0f;
 	private float health = 0, cooldown = 1, damage = 1; //Cooldown: time between actions, smaller means more aggresive
 	private int state = 1, onWall = 0, enable = 1, decideDir = 2; //onWall: 1 left, 0 none, -1 right
+	private bool canFlip = true;
 	private AnimatedSprite2D spriteChefe;
 	private CharacterBody2D player;
+	private bool isBodyPlayer = false;
+	private Timer timerWall, timerPush;
+	private Area2D afastaDir, afastaEsq;
 	private Marker2D headPos, lPos, rPos;
 	private Vector2 viewSize;
 	[Signal]
@@ -29,6 +33,16 @@ public partial class Chefe : CharacterBody2D
 		Surface += phases; 
 		Jumped += coolJump;
 		spriteChefe = GetNode<AnimatedSprite2D>("SpriteChefe");
+		timerWall = GetNode<Timer>("TimerWall");
+		timerWall.Timeout += backToTryOver;
+		timerPush = GetNode<Timer>("TimerEmpurra");
+		timerPush.Timeout += endPush;
+		afastaDir = GetNode<Area2D>("AfastaDir");
+		afastaDir.BodyEntered += collect;
+		afastaDir.BodyExited += discollect;
+		afastaEsq = GetNode<Area2D>("AfastaEsq");
+		afastaEsq.BodyEntered += collect;
+		afastaEsq.BodyExited += discollect;
 	}
 
 	public override void _PhysicsProcess(double delta)
@@ -50,13 +64,15 @@ public partial class Chefe : CharacterBody2D
 			else
 				onWall = -1;
 			decideDir = -onWall;
-			if(enable == 1){
+			if(enable == 1 && state == 0){
 				enable = 0;
 				EmitSignal(SignalName.Surface);
 			}
 		}
 		if(IsOnFloor()){
-			onWall = 0;
+			if(state == 0){
+				onWall = 0;
+			}
 			if(!IsOnWallBoss())
 				Velocity = Vector2.Zero;
 			if(enable == 1){
@@ -72,7 +88,17 @@ public partial class Chefe : CharacterBody2D
 
 		MoveAndSlide();
 		orientation();
-		
+	}
+	
+	//flipamento do chefe
+	private void orientation(){
+		if(canFlip){
+			//GD.Print(isRunningOver + " entrou 3 no momento "+Time.GetTicksMsec());
+			spriteChefe.FlipH = !getPlayerPosition(); 
+		}
+	}
+	private bool getPlayerPosition(){
+		return player.Position.X-Position.X > 0;
 	}
 
 	//-------etapa 1
@@ -94,19 +120,6 @@ public partial class Chefe : CharacterBody2D
 		//GD.Print("Cool: "+cooldown);
 		enable = 1;
 		/*GD.Print("Enabled");*/
-	}
-	private void orientation(){
-		/*if(getPlayerPosition()){
-			//GD.Print(getPlayerPosition());
-			spriteChefe.FlipH = false;
-		}else{
-			//GD.Print(getPlayerPosition());
-			spriteChefe.FlipH = true;
-		}*/
-		spriteChefe.FlipH = !getPlayerPosition(); 
-	}
-	private bool getPlayerPosition(){
-		return player.Position.X-Position.X > 0;
 	}
 	
 	private void phase1(){
@@ -168,10 +181,13 @@ public partial class Chefe : CharacterBody2D
 	}
 	
 	//-------etapa 2
-	bool isRunningOver = false;
+	bool isRunningOver = true;
+	bool backupWall = false;
 	Vector2 direction = new Vector2();
 	private void phase2(){
 		tryRunOver();
+		cameToWall();
+		push();
 	}
 	private void tryRunOver(){
 		if(isRunningOver){
@@ -179,10 +195,53 @@ public partial class Chefe : CharacterBody2D
 				direction.X = -1;
 			}else{
 				direction.X = 1;
-			}
-			isRunningOver = false;
+			} 
+			//GD.Print("entrou 1 no momento "+Time.GetTicksMsec()+" com a direção " + direction.X);
+			isRunningOver = canFlip = false;
 		}
-		Velocity = direction * Speed;
-		GD.Print(Velocity);
+		Velocity = direction * Speed * 4;
+		//GD.Print(Velocity);
+	}
+	private void cameToWall(){
+		if(changeBackupWall() && timerWall.IsStopped()){
+			//GD.Print("entrou 2 no momento "+Time.GetTicksMsec());
+			timerWall.Start();
+		}
+	}
+	private bool changeBackupWall(){
+		if(backupWall != IsOnWallBoss()){
+			//GD.Print("backup " + backupWall + " IsOnWallBoss " + IsOnWallBoss());
+			backupWall = IsOnWallBoss();
+			if(backupWall){
+				return true;
+			}
+		}
+		return false;
+	}
+	private void backToTryOver(){
+		canFlip = true;
+		timerPush.Start();
+		GD.Print("Timer iniciado em " + Time.GetTicksMsec());
+	}
+	private void collect(Node2D body){
+		if(body == player){
+			isBodyPlayer = true;
+		}
+	}
+	private void discollect(Node2D body){
+		if(body == player){
+			isBodyPlayer = false;
+		}
+	}
+	private void push(){
+		if(isBodyPlayer && !timerPush.IsStopped()){
+			//GD.Print("timer com tempo restando em " + timerPush.TimeLeft);
+			Namorado boyfriend = (Namorado) player;
+			boyfriend.EhEmpurrado();
+		}
+	}
+	private void endPush(){
+		//GD.Print("Acabou em " + Time.GetTicksMsec());
+		isRunningOver = true;
 	}
 }

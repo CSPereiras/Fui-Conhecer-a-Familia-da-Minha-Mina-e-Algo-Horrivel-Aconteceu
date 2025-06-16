@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://dtfraxb01exs4"]
+[gd_scene load_steps=6 format=3 uid="uid://dtfraxb01exs4"]
 
 [ext_resource type="Script" uid="uid://bxcqkwrs3dwh8" path="res://Personagens/Sogro/Chefe.cs" id="1_yxyuj"]
 [ext_resource type="Texture2D" uid="uid://br61ipgwnglh3" path="res://Personagens/Sogro/ChefeNeighbor.png" id="2_l0akp"]
@@ -16,6 +16,9 @@ animations = [{
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ds0ub"]
 size = Vector2(78, 123)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_m5x8i"]
+size = Vector2(57, 45)
 
 [node name="Chefe" type="CharacterBody2D"]
 script = ExtResource("1_yxyuj")
@@ -37,5 +40,30 @@ position = Vector2(-39, 0)
 [node name="Right" type="Marker2D" parent="."]
 position = Vector2(39, 0)
 
-[node name="TimerPegaNamorado" type="Timer" parent="."]
+[node name="TimerWall" type="Timer" parent="."]
+wait_time = 5.0
 one_shot = true
+
+[node name="AfastaDir" type="Area2D" parent="."]
+position = Vector2(61, 0)
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AfastaDir"]
+position = Vector2(7.5, -0.5)
+shape = SubResource("RectangleShape2D_m5x8i")
+
+[node name="AfastaEsq" type="Area2D" parent="."]
+position = Vector2(-62, 0)
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AfastaEsq"]
+position = Vector2(-6.5, -0.5)
+shape = SubResource("RectangleShape2D_m5x8i")
+
+[node name="TimerEmpurra" type="Timer" parent="."]
+one_shot = true
+
+[connection signal="timeout" from="TimerWall" to="." method="_on_timer_wall_timeout"]
+[connection signal="body_entered" from="AfastaDir" to="." method="_on_afasta_dir_body_entered"]
+[connection signal="body_entered" from="AfastaEsq" to="." method="_on_afasta_dir_body_entered"]
+[connection signal="timeout" from="TimerEmpurra" to="." method="_on_timer_empurra_timeout"]
