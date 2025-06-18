@@ -126,7 +126,7 @@ public partial class Chefe : CharacterBody2D
 			case 2:
 				if (checkVelNearZero && ChangedDirectionY(Velocity.Y))
 				{
-					//GD.Print("Fall Impact");
+					GD.Print("Fall Impact");
 					Velocity = Vector2.Zero; enableGrav = false;
 					EmitSignal(SignalName.FallImpact);
 				}
@@ -363,8 +363,11 @@ public partial class Chefe : CharacterBody2D
 	}
 	private async void FallDownImpact()
 	{
-		await ToSignal(GetTree().CreateTimer(baseCool), "timeout");
-		enableFall = enableGrav = true;
+		await ToSignal(GetTree().CreateTimer(baseCool*0.7), "timeout");
+		enableFall = true; //segue o player no pelo ar
+		Velocity = Vector2.Zero; //para no lugar
+		await ToSignal(GetTree().CreateTimer(baseCool/5), "timeout");
+		enableGrav = true; // cai
 		Velocity = new Vector2(0, -JumpVelocity);
 		Gravity = 3*G;
 		//shocka and wait
